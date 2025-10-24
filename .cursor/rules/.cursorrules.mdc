@@ -1,0 +1,316 @@
+---
+alwaysApply: true
+---
+        component: 'Component description and usage guidelines',
+      },
+    },
+  },
+  argTypes: {
+    // Define controls for all props
+  },
+  args: {
+    // Default args
+  },
+} satisfies Meta<typeof Component>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const Variant: Story = { args: { variant: 'primary' } };
+```
+
+## 🧪 Testing Requirements
+
+### 100% Test Coverage Mandate
+- ALL components MUST achieve 100% test coverage
+- Write unit tests for every component
+- Test all prop variations and edge cases
+- Include accessibility tests
+- Test user interactions and event handlers
+- Use `@testing-library/react` for component testing
+- Use `@testing-library/user-event` for interaction testing
+
+### Test File Structure
+```typescript
+// Component.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Component } from './Component';
+
+describe('Component', () => {
+  it('renders with default props', () => {
+    render(<Component />);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+
+  it('handles all prop variations', () => {
+    // Test all prop combinations
+  });
+
+  it('handles user interactions', async () => {
+    const user = userEvent.setup();
+    // Test all interactions
+  });
+
+  it('has no accessibility violations', async () => {
+    const { container } = render(<Component />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+});
+```
+
+## ♿ Accessibility Requirements
+
+### ARIA and Semantic HTML
+- Use semantic HTML elements (`button`, `nav`, `main`, etc.)
+- Include proper ARIA attributes (`aria-label`, `aria-describedby`, etc.)
+- Ensure keyboard navigation works for all interactive elements
+- Test with screen readers and accessibility tools
+- Maintain proper color contrast ratios
+- Include focus management for modals and complex components
+
+### Accessibility Testing
+```typescript
+// Include in every component test
+import { axe, toHaveNoViolations } from 'jest-axe';
+expect.extend(toHaveNoViolations);
+
+it('has no accessibility violations', async () => {
+  const { container } = render(<Component />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+```
+
+## 🎨 Styling and Design Tokens
+
+### CSS Architecture
+- Use Tailwind CSS utility classes
+- Create component-specific CSS files when needed
+- Use CSS custom properties for design tokens
+- Follow BEM methodology for custom CSS classes
+- Ensure responsive design with mobile-first approach
+
+### Design Token Usage
+```css
+/* Use design tokens from docs/DESIGN_TOKENS.md */
+.component {
+  background-color: var(--color-primary-500);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+}
+```
+
+### Component Styling
+```typescript
+// Use Tailwind classes with design tokens
+export const Button = ({ variant, size, className, ...props }: ButtonProps) => {
+  const baseClasses = 'font-medium transition-colors focus:outline-none focus:ring-2';
+  const variantClasses = {
+    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+  };
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-6 py-3 text-lg',
+  };
+
+  return (
+    <button
+      className={cn(
+        baseClasses,
+        variantClasses[variant],
+        sizeClasses[size],
+        className
+      )}
+      {...props}
+    />
+  );
+};
+```
+
+## 📚 Documentation Requirements
+
+### Component Documentation
+- Include comprehensive JSDoc comments
+- Document all props with types and descriptions
+- Provide usage examples in stories
+- Include accessibility notes
+- Document design decisions and rationale
+
+### Storybook Documentation
+- Use `tags: ['autodocs']` for automatic documentation
+- Include component descriptions in story parameters
+- Add usage examples and guidelines
+- Document design tokens and theming
+- Include accessibility information
+
+## 🚀 Performance Requirements
+
+### Component Optimization
+- Use `React.memo` for expensive components
+- Implement proper `useCallback` and `useMemo` usage
+- Avoid unnecessary re-renders
+- Use lazy loading for heavy components
+- Optimize bundle size with tree shaking
+
+### Storybook Performance
+- Use dynamic imports for large components
+- Implement story pagination for large component libraries
+- Optimize images and assets
+- Use proper story organization to reduce load times
+
+## 🔧 Code Quality Rules
+
+### ESLint and Prettier
+- Follow ESLint rules for React, TypeScript, and Storybook
+- Use Prettier for code formatting
+- Fix all linting errors before committing
+- Use meaningful variable and function names
+
+### Git and Version Control
+- Write clear, descriptive commit messages
+- Use conventional commits format
+- Create feature branches for new components
+- Include tests and documentation in every PR
+
+### Code Organization
+```typescript
+// Component file structure
+export interface ComponentProps {
+  /** Description of the prop */
+  title: string;
+  /** Optional description */
+  variant?: 'primary' | 'secondary';
+  /** Click handler */
+  onClick?: () => void;
+}
+
+/**
+ * Component description and usage examples
+ * 
+ * @example
+ * ```tsx
+ * <Component title="Hello" variant="primary" />
+ * ```
+ */
+export const Component = ({ title, variant = 'primary', onClick, ...props }: ComponentProps) => {
+  // Component implementation
+};
+```
+
+## 🎯 Storybook-Specific Rules
+
+### Story Configuration
+- Always include `tags: ['autodocs']` for documentation
+- Use proper story titles following the hierarchy: `Components/ComponentName`
+- Include comprehensive `argTypes` for all props
+- Add interaction tests using `play` functions
+- Use `fn()` for action handlers
+
+### Story Examples
+```typescript
+// Include multiple story variations
+export const Default: Story = {};
+export const Primary: Story = { args: { variant: 'primary' } };
+export const Secondary: Story = { args: { variant: 'secondary' } };
+export const Large: Story = { args: { size: 'large' } };
+export const Disabled: Story = { args: { disabled: true } };
+export const WithIcon: Story = { args: { icon: 'arrow-right' } };
+export const Loading: Story = { args: { loading: true } };
+```
+
+### Interaction Testing
+```typescript
+// Include interaction tests in stories
+export const Interactive: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+    await userEvent.click(button);
+    // Add assertions
+  },
+};
+```
+
+## 📦 Import and Export Rules
+
+### Component Exports
+```typescript
+// Always use named exports
+export { Button } from './Button';
+export { Input } from './Input';
+
+// Export types
+export type { ButtonProps } from './Button';
+export type { InputProps } from './Input';
+```
+
+### Story Imports
+```typescript
+// Use proper imports for stories
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { fn } from 'storybook/test';
+import { Component } from './Component';
+```
+
+## 🔄 Development Workflow
+
+### Before Creating Components
+1. Check if similar component exists
+2. Review design tokens and patterns
+3. Plan component API and props
+4. Consider accessibility requirements
+5. Plan test coverage strategy
+
+### Component Development Process
+1. Create component with TypeScript interface
+2. Write comprehensive tests (100% coverage)
+3. Create Storybook stories
+4. Add accessibility features
+5. Document component usage
+6. Review and refactor
+
+### Before Committing
+1. Run tests and ensure 100% coverage
+2. Run Storybook and verify stories
+3. Check accessibility with axe
+4. Run ESLint and fix issues
+5. Update documentation if needed
+
+## 🚨 Common Mistakes to Avoid
+
+### Don't Do This
+- Create components without stories
+- Skip TypeScript interfaces
+- Ignore accessibility requirements
+- Write tests without 100% coverage
+- Use `any` type in TypeScript
+- Forget to test user interactions
+- Skip documentation
+- Create components without design tokens
+
+### Always Do This
+- Create comprehensive stories
+- Use proper TypeScript typing
+- Include accessibility features
+- Achieve 100% test coverage
+- Use design tokens for styling
+- Test all user interactions
+- Document everything
+- Follow established patterns
+
+## 📖 Resources and References
+
+- **Storybook Documentation**: https://storybook.js.org/docs
+- **Testing Library**: https://testing-library.com/docs
+- **Accessibility Guidelines**: https://www.w3.org/WAI/WCAG21/quickref/
+- **Design Tokens**: See `docs/DESIGN_TOKENS.md`
+- **Component Guide**: See `docs/COMPONENT_GUIDE.md`
+- **Testing Setup**: See `docs/TESTING_SETUP.md`
+
+Remember: This is a design system project. Every component you create will be used by other developers. Make it excellent, accessible, well-tested, and thoroughly documented.

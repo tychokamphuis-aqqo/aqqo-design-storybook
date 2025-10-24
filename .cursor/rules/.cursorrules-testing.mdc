@@ -1,0 +1,388 @@
+# Testing-Specific Cursor Rules
+
+This file contains testing-specific rules and guidelines for the Aqqo Design System project.
+
+## 🧪 Testing Requirements
+
+### 100% Test Coverage Mandate
+- **ALL components MUST achieve 100% test coverage**
+- This includes statements, branches, functions, and lines
+- No exceptions - every component must be fully tested
+- Coverage is enforced through CI/CD and pre-commit hooks
+
+### Test File Requirements
+- Every component MUST have a corresponding `.test.tsx` file
+- Test files must be placed in the same directory as the component
+- Use the naming convention: `ComponentName.test.tsx`
+- Include comprehensive test coverage for all component functionality
+
+### Test Structure Requirements
+```typescript
+// Required test structure
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { Component } from './Component';
+
+// Extend expect with jest-dom matchers
+expect.extend(toHaveNoViolations);
+
+describe('Component', () => {
+  // Test all component functionality
+});
+```
+
+### Required Test Categories
+
+#### 1. Rendering Tests
+```typescript
+it('renders with default props', () => {
+  render(<Component />);
+  expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
+it('renders with custom props', () => {
+  render(<Component title="Custom Title" />);
+  expect(screen.getByText('Custom Title')).toBeInTheDocument();
+});
+```
+
+#### 2. Prop Variation Tests
+```typescript
+it('handles all prop variations', () => {
+  const variants = ['primary', 'secondary', 'danger'];
+  variants.forEach(variant => {
+    const { rerender } = render(<Component variant={variant} />);
+    expect(screen.getByRole('button')).toHaveClass(`component--${variant}`);
+    rerender(<div />);
+  });
+});
+```
+
+#### 3. User Interaction Tests
+```typescript
+it('handles user interactions', async () => {
+  const user = userEvent.setup();
+  const handleClick = vi.fn();
+  render(<Component onClick={handleClick} />);
+  
+  await user.click(screen.getByRole('button'));
+  expect(handleClick).toHaveBeenCalledTimes(1);
+});
+```
+
+#### 4. Keyboard Navigation Tests
+```typescript
+it('supports keyboard navigation', async () => {
+  const user = userEvent.setup();
+  const handleClick = vi.fn();
+  render(<Component onClick={handleClick} />);
+  
+  const button = screen.getByRole('button');
+  button.focus();
+  
+  await user.keyboard('{Enter}');
+  expect(handleClick).toHaveBeenCalledTimes(1);
+  
+  await user.keyboard(' ');
+  expect(handleClick).toHaveBeenCalledTimes(2);
+});
+```
+
+#### 5. Accessibility Tests
+```typescript
+it('has no accessibility violations', async () => {
+  const { container } = render(<Component />);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+
+it('supports screen readers', () => {
+  render(<Component aria-label="Custom label" />);
+  expect(screen.getByLabelText('Custom label')).toBeInTheDocument();
+});
+```
+
+#### 6. Error State Tests
+```typescript
+it('handles error states', () => {
+  render(<Component error="Error message" />);
+  expect(screen.getByText('Error message')).toBeInTheDocument();
+  expect(screen.getByRole('button')).toHaveAttribute('aria-invalid', 'true');
+});
+```
+
+#### 7. Edge Case Tests
+```typescript
+it('handles edge cases', () => {
+  // Test with empty strings
+  render(<Component title="" />);
+  expect(screen.getByRole('button')).toBeInTheDocument();
+  
+  // Test with very long text
+  const longText = 'a'.repeat(1000);
+  render(<Component title={longText} />);
+  expect(screen.getByText(longText)).toBeInTheDocument();
+});
+```
+
+#### 8. State Management Tests
+```typescript
+it('manages component state correctly', () => {
+  const { rerender } = render(<Component loading={false} />);
+  expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  
+  rerender(<Component loading={true} />);
+  expect(screen.getByText('Loading...')).toBeInTheDocument();
+});
+```
+
+### Storybook Testing Requirements
+
+#### Story Testing
+```typescript
+// Component.stories.test.ts
+import { expect, test } from '@storybook/test';
+import { composeStories } from '@storybook/react';
+import { render, screen } from '@testing-library/react';
+import * as stories from './Component.stories';
+
+const { Primary, Secondary, Disabled } = composeStories(stories);
+
+describe('Component Stories', () => {
+  test('Primary story renders correctly', () => {
+    render(<Primary />);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toHaveClass('component--primary');
+  });
+});
+```
+
+#### Interaction Testing
+```typescript
+// Component.interaction.test.ts
+import { expect, userEvent, within } from '@storybook/test';
+
+export const ClickInteraction = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+    
+    await userEvent.click(button);
+    // Add assertions for expected behavior
+  },
+};
+```
+
+### Test Coverage Configuration
+
+#### Vitest Configuration
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/stories/**',
+        '**/*.stories.*',
+      ],
+      thresholds: {
+        global: {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100,
+        },
+      },
+    },
+  },
+});
+```
+
+### Testing Best Practices
+
+#### Test Organization
+- Group related tests using `describe` blocks
+- Use clear, descriptive test names
+- Follow the AAA pattern: Arrange, Act, Assert
+- Test one thing per test case
+- Use proper setup and teardown
+
+#### Test Data
+- Use meaningful test data
+- Test with realistic data
+- Include edge cases and boundary conditions
+- Use factories for complex test data
+- Mock external dependencies properly
+
+#### Assertions
+- Use specific assertions
+- Test both positive and negative cases
+- Include accessibility assertions
+- Test error conditions
+- Verify side effects
+
+#### Performance Testing
+- Test component rendering performance
+- Test interaction responsiveness
+- Test memory usage
+- Test bundle size impact
+- Test runtime performance
+
+### CI/CD Testing Rules
+
+#### Pre-commit Hooks
+- Run tests before every commit
+- Ensure 100% coverage before committing
+- Run linting and formatting checks
+- Validate TypeScript compilation
+- Check accessibility compliance
+
+#### Continuous Integration
+- Run full test suite on every PR
+- Enforce coverage thresholds
+- Run performance tests
+- Test in multiple environments
+- Validate documentation
+
+#### Coverage Reporting
+- Generate HTML coverage reports
+- Upload coverage to external services
+- Track coverage trends over time
+- Alert on coverage drops
+- Include coverage in PR comments
+
+### Testing Tools and Libraries
+
+#### Required Dependencies
+```json
+{
+  "devDependencies": {
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "vitest": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "jest-axe": "^8.0.0"
+  }
+}
+```
+
+#### Testing Utilities
+- Use `@testing-library/react` for component testing
+- Use `@testing-library/user-event` for interaction testing
+- Use `jest-axe` for accessibility testing
+- Use `vitest` for test runner and coverage
+- Use `jsdom` for DOM environment
+
+### Common Testing Patterns
+
+#### Component Testing Pattern
+```typescript
+describe('Component', () => {
+  // Setup
+  const defaultProps = {
+    // Default props
+  };
+
+  // Rendering tests
+  describe('Rendering', () => {
+    it('renders with default props', () => {
+      render(<Component {...defaultProps} />);
+      expect(screen.getByRole('button')).toBeInTheDocument();
+    });
+  });
+
+  // Interaction tests
+  describe('Interactions', () => {
+    it('handles click events', async () => {
+      const user = userEvent.setup();
+      const handleClick = vi.fn();
+      render(<Component {...defaultProps} onClick={handleClick} />);
+      
+      await user.click(screen.getByRole('button'));
+      expect(handleClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Accessibility tests
+  describe('Accessibility', () => {
+    it('has no accessibility violations', async () => {
+      const { container } = render(<Component {...defaultProps} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+});
+```
+
+### Testing Checklist
+
+#### Before Writing Tests
+- [ ] Understand component requirements
+- [ ] Identify all prop variations
+- [ ] Plan test coverage strategy
+- [ ] Set up test environment
+- [ ] Configure testing tools
+
+#### While Writing Tests
+- [ ] Test all component states
+- [ ] Test all user interactions
+- [ ] Test accessibility features
+- [ ] Test error conditions
+- [ ] Test edge cases
+- [ ] Achieve 100% coverage
+
+#### After Writing Tests
+- [ ] Run all tests
+- [ ] Check coverage report
+- [ ] Fix any failing tests
+- [ ] Update documentation
+- [ ] Review test quality
+
+### Testing Anti-patterns to Avoid
+
+#### Don't Do This
+- Skip testing certain code paths
+- Use shallow rendering for complex components
+- Ignore accessibility testing
+- Skip error state testing
+- Use brittle selectors
+- Test implementation details
+- Skip integration testing
+- Ignore performance testing
+
+#### Always Do This
+- Test all code paths
+- Use proper testing utilities
+- Include accessibility testing
+- Test error conditions
+- Use semantic selectors
+- Test user behavior
+- Include integration tests
+- Test performance impact
+
+### Testing Documentation
+
+#### Test Documentation Requirements
+- Document test purpose and scope
+- Include test data explanations
+- Document test setup and teardown
+- Include coverage information
+- Document testing strategies
+
+#### Test Maintenance
+- Keep tests up to date with component changes
+- Refactor tests when components change
+- Update test documentation
+- Review test quality regularly
+- Remove obsolete tests
+
+Remember: 100% test coverage is not optional - it's mandatory for all components in this design system. Every line of code must be tested, every interaction must be verified, and every edge case must be covered.
